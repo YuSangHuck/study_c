@@ -15,11 +15,12 @@ void *child_thread_function(void *arg) {
     while (1) {
         // 메인 스레드로부터 "ping" 메시지 받기
         bytes_read = read(main_to_child_pipe[0], buffer, BUFFER_SIZE);
-        printf("Child thread received message from main: %s\n", buffer);
+        printf("Child thread received message from main (read_fd=%d): %s\n", main_to_child_pipe[0], buffer);
 
         // "pong" 메시지 보내기
         char response[] = "pong";
         write(child_to_main_pipe[1], response, sizeof(response));
+        printf("Child thread sent message to main (write_fd=%d): %s\n", child_to_main_pipe[1], response);
     }
 
     close(main_to_child_pipe[0]);
@@ -46,6 +47,9 @@ int main() {
         return 1;
     }
 
+    printf("Main to child pipe: read_fd=%d, write_fd=%d\n", main_to_child_pipe[0], main_to_child_pipe[1]);
+    printf("Child to main pipe: read_fd=%d, write_fd=%d\n", child_to_main_pipe[0], child_to_main_pipe[1]);
+
     // close(main_to_child_pipe[0]); // 메인 스레드는 자식 스레드로부터 읽기를 하지 않으므로 해당 파이프 닫음
     // close(child_to_main_pipe[1]); // 메인 스레드는 자식 스레드로 쓰기를 하므로 해당 파이프 닫지 않음
 
@@ -56,6 +60,7 @@ int main() {
             perror("write");
             return 1; // 에러가 발생하면 프로그램 종료
         }
+        printf("Main thread sent message to child (write_fd=%d): %s\n", main_to_child_pipe[1], message);
 
         // 자식 스레드로부터 "pong" 메시지 받기
         ssize_t bytes_read = read(child_to_main_pipe[0], response_buffer, BUFFER_SIZE);
@@ -63,7 +68,7 @@ int main() {
             perror("read");
             return 1; // 에러가 발생하면 프로그램 종료
         }
-        printf("Main thread received response from child: %s\n", response_buffer);
+        printf("Main thread received response from child (read_fd=%d): %s\n", child_to_main_pipe[0], response_buffer);
         sleep(1); // 1초 대기
     }
 
