@@ -7,4 +7,4 @@ set(CMAKE_C_STANDARD 11)
 set(CLIENT_SOURCE_FILES client.c)
 
 # 클라이언트 바이너리 생성
-add_executable(client ${CLIENT_SOURCE_FILES})
+add_executable(client_exe ${CLIENT_SOURCE_FILES})

@@ -7,4 +7,4 @@ set(CMAKE_C_STANDARD 11)
 set(SERVER_SOURCE_FILES server.c)
 
 # 서버 바이너리 생성
-add_executable(server ${SERVER_SOURCE_FILES})
+add_executable(server_exe ${SERVER_SOURCE_FILES})

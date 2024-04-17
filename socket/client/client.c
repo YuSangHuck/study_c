@@ -4,11 +4,16 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define BUFFER_SIZE (1024 * 1024) // 1MB
+#define BUFFER_SIZE_1KB (1024 * 1024 * 1024) // 1KB
+#define BUFFER_SIZE_1MB (1024 * 1024) // 1MB
 
 int main() {
     // 소켓 생성
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_socket == -1) {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
 
     // 서버 주소 설정
     struct sockaddr_in server_address;
@@ -18,14 +23,24 @@ int main() {
     server_address.sin_port = htons(12345);
 
     // 서버에 연결
-    connect(client_socket, (struct sockaddr*)&server_address, sizeof(server_address));
+    if (connect(client_socket, (struct sockaddr*)&server_address, sizeof(server_address)) == -1) {
+        perror("Connection failed");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
 
     // 데이터 전송
-    char* message = (char*)malloc(BUFFER_SIZE);
-    memset(message, 'A', BUFFER_SIZE); // 1MB 크기의 데이터 생성
+    char* message = (char*)malloc(BUFFER_SIZE_1KB);
+    memset(message, 'A', BUFFER_SIZE_1KB); // 1KB 크기의 데이터 생성
 
     while (1) {
-        write(client_socket, message, BUFFER_SIZE);
+        if (send(client_socket, message, BUFFER_SIZE_1KB, 0) == -1) {
+            perror("Send failed");
+            close(client_socket);
+            free(message);
+            exit(EXIT_FAILURE);
+        }
+        printf("Sent %d bytes of data\n", BUFFER_SIZE_1KB);
         sleep(1); // 1초 대기
     }
 
