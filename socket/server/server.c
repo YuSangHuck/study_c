@@ -3,13 +3,22 @@
 #include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <errno.h>
 
-#define BUFFER_SIZE (1024 * 1024) // 1MB
+#define PORT 12345
+#define MAX_CLIENTS 10
+#define BUFFER_SIZE 1024
 
 int main() {
-    // 소켓 생성
+    int i, client_sockets[MAX_CLIENTS];
+    // Initialize client sockets to 0
+    for (i = 0; i < MAX_CLIENTS; i++) {
+        client_sockets[i] = 0;
+    }
+
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    // Creating socket file descriptor
     if (server_socket == -1) {
         perror("Socket creation failed");
         exit(EXIT_FAILURE);
@@ -20,7 +29,7 @@ int main() {
     memset(&server_address, 0, sizeof(server_address));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(12345);
+    server_address.sin_port = htons(PORT);
 
     // 바인딩
     if (bind(server_socket, (struct sockaddr*)&server_address, sizeof(server_address)) == -1) {
@@ -36,47 +45,66 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // 클라이언트 연결 수락
-    int client_socket = accept(server_socket, NULL, NULL);
-    if (client_socket == -1) {
-        perror("Accept failed");
-        close(server_socket);
-        exit(EXIT_FAILURE);
-    }
-
-    // 소켓 버퍼의 최대 크기 확인
-    int max_buffer_size;
-    if (ioctl(client_socket, FIONREAD, &max_buffer_size) == -1) {
-        perror("Failed to get max buffer size");
-        close(client_socket);
-        close(server_socket);
-        exit(EXIT_FAILURE);
-    }
-    printf("Max buffer size: %d byes\n", max_buffer_size);
-
-    // 클라이언트로부터 데이터 수신
-    char buffer[BUFFER_SIZE];
+    int new_socket, activity, valread;
+    int addrlen = sizeof(server_address);
+    char buffer[BUFFER_SIZE] = {0};
     while (1) {
-        // int recv_size = recv(client_socket, buffer, BUFFER_SIZE, 0); // MSG_DONTWAIT 플래그 제거
-        // if (recv_size == -1) {
-        //     perror("Receive failed");
-        //     close(client_socket);
-        //     close(server_socket);
-        //     exit(EXIT_FAILURE);
-        // } else if (recv_size == 0) {
-        //     printf("Client disconnected\n");
-        //     break;
-        // } else {
-        //     printf("Received %d bytes of data\n", recv_size);
-        //     // 여기서 데이터를 처리하지 않고 소켓 버퍼를 계속 채우도록 함
-        // }
-        sleep(1);
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(server_socket, &readfds);
+        int max_sd = server_socket;
+
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            int sd = client_sockets[i];
+            if (sd > 0)
+                FD_SET(sd, &readfds);
+            if (sd > max_sd)
+                max_sd = sd;
+        }
+
+        activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+
+        if ((activity < 0) && (errno!=EINTR)) {
+            perror("select error");
+        }
+
+        if (FD_ISSET(server_socket, &readfds)) {
+            if ((new_socket = accept(server_socket, (struct sockaddr *)&server_address, (socklen_t*)&addrlen))<0) {
+                perror("accept");
+                exit(EXIT_FAILURE);
+            }
+
+            // Send welcome message to the client
+            printf("New client connected. IP: %s, Port: %d\n", inet_ntoa(server_address.sin_addr), ntohs(server_address.sin_port));
+
+            // Add new socket to array of sockets
+            for (i = 0; i < MAX_CLIENTS; i++) {
+                if (client_sockets[i] == 0) {
+                    client_sockets[i] = new_socket;
+                    break;
+                }
+            }
+        }
+
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            int sd = client_sockets[i];
+
+            if (FD_ISSET(sd, &readfds)) {
+                if ((valread = read(sd, buffer, BUFFER_SIZE)) == 0) {
+                    // Client disconnected
+                    getpeername(sd, (struct sockaddr*)&server_address, (socklen_t*)&addrlen);
+                    printf("Host disconnected, IP %s, Port %d \n", inet_ntoa(server_address.sin_addr), ntohs(server_address.sin_port));
+
+                    // Close the socket and mark as 0 in list
+                    close(sd);
+                    client_sockets[i] = 0;
+                } else {
+                    // Print received message
+                    buffer[valread] = '\0';
+                    printf("Client: %s", buffer);
+                }
+            }
+        }
     }
-
-
-    // 소켓 닫기
-    close(client_socket);
-    close(server_socket);
-
     return 0;
 }
