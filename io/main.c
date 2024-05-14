@@ -30,10 +30,9 @@ int main() {
     const char* filename_1gb_fio = "1gb_fio.dat";
 
     // Dynamically allocate sample arrays
-    int size = sizeof(char) + sizeof(int) + sizeof(long) + sizeof(double); // char c; int i; long l; double d;
-    int cnt_1kb = 1024 / size;
-    int cnt_1mb = 1024 * 1024 / size;
-    int cnt_1gb = 1024 * 1024 * 1024 / size;
+    int cnt_1kb = 1024 / SIZEOF_SAMPLE_WRITE;
+    int cnt_1mb = 1024 * 1024 / SIZEOF_SAMPLE_WRITE;
+    int cnt_1gb = 1024 * 1024 * 1024 / SIZEOF_SAMPLE_WRITE;
 
     sample* sample_1kb = malloc(cnt_1kb * sizeof(sample));
     sample* sample_1mb = malloc(cnt_1mb * sizeof(sample));
@@ -44,10 +43,9 @@ int main() {
     measure_time(io_write, filename_1mb_io, sample_1mb, cnt_1mb, "1mb io");
     measure_time(io_write, filename_1gb_io, sample_1gb, cnt_1gb, "1gb io");
 
-    // Segmentation fault (core dumped)
-    // measure_time(block_io_write, filename_1kb_block_io, sample_1kb, cnt_1kb, "1kb block_io");
-    // measure_time(block_io_write, filename_1mb_block_io, sample_1mb, cnt_1mb, "1mb block_io");
-    // measure_time(block_io_write, filename_1gb_block_io, sample_1gb, cnt_1gb, "1gb block_io");
+    measure_time(block_io_write, filename_1kb_block_io, sample_1kb, cnt_1kb, "1kb block_io");
+    measure_time(block_io_write, filename_1mb_block_io, sample_1mb, cnt_1mb, "1mb block_io");
+    measure_time(block_io_write, filename_1gb_block_io, sample_1gb, cnt_1gb, "1gb block_io");
 
     measure_time(fio_write, filename_1kb_fio, sample_1kb, cnt_1kb, "1kb fio");
     measure_time(fio_write, filename_1mb_fio, sample_1mb, cnt_1mb, "1mb fio");

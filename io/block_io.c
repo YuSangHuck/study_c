@@ -23,7 +23,7 @@ void block_io_write(const char* filename, sample* samples, int cnt) {
         memcpy(&blk[offset], &samples[i].d, sizeof(samples[i].d));
         offset += sizeof(samples[i].d);
 
-        if (offset == BLOCK_SIZE) {
+        if (offset >= BLOCK_SIZE) {
             write(fd, blk, BLOCK_SIZE);
             offset = 0;
         }
@@ -63,7 +63,7 @@ void block_io_read(const char* filename, sample* samples, int cnt) {
         memcpy(&samples[i].d, &blk[offset], sizeof(samples[i].d));
         offset += sizeof(samples[i].d);
 
-        if (offset == BLOCK_SIZE) {
+        if (offset >= BLOCK_SIZE) {
             offset = 0;
         }
     }
