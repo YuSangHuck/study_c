@@ -11,8 +11,7 @@
 #define BLOCK_SIZE 65536 // 64KB
 
 struct sample {
-    int* arr_int;
-    char* arr_char;
+    char c;
 };
 
 void block_write(int fd, void* data, size_t size);
