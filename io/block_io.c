@@ -1,84 +1,72 @@
 #include "block_io.h"
 
-void block_write(int fd, void* data, size_t size) {
-    size_t remaining = size;
-    size_t offset = 0;
+void block_io_write(const char* filename, sample* samples, int cnt) {
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd == -1) {
+        perror("Failed to open file");
+        return;
+    }
 
-    while (remaining > 0) {
-        size_t bytes_to_write = remaining > BLOCK_SIZE ? BLOCK_SIZE : remaining;
-        ssize_t bytes_written = write(fd, (char*)data + offset, bytes_to_write);
-        if (bytes_written == -1) {
-            perror("Failed to write to file");
-            return;
+    char blk[BLOCK_SIZE];
+    int offset = 0;
+
+    for (int i = 0; i < cnt; ++i) {
+        memcpy(&blk[offset], &samples[i].c, sizeof(samples[i].c));
+        offset += sizeof(samples[i].c);
+
+        memcpy(&blk[offset], &samples[i].i, sizeof(samples[i].i));
+        offset += sizeof(samples[i].i);
+
+        memcpy(&blk[offset], &samples[i].l, sizeof(samples[i].l));
+        offset += sizeof(samples[i].l);
+
+        memcpy(&blk[offset], &samples[i].d, sizeof(samples[i].d));
+        offset += sizeof(samples[i].d);
+
+        if (offset == BLOCK_SIZE) {
+            write(fd, blk, BLOCK_SIZE);
+            offset = 0;
         }
-        remaining -= bytes_written;
-        offset += bytes_written;
     }
+
+    if (offset > 0) {
+        write(fd, blk, offset);
+    }
+
+    close(fd);
 }
 
-void block_read(int fd, void* data, size_t size) {
-    size_t remaining = size;
-    size_t offset = 0;
+void block_io_read(const char* filename, sample* samples, int cnt) {
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        perror("Failed to open file");
+        return;
+    }
 
-    while (remaining > 0) {
-        size_t bytes_to_read = remaining > BLOCK_SIZE ? BLOCK_SIZE : remaining;
-        ssize_t bytes_read = read(fd, (char*)data + offset, bytes_to_read);
-        if (bytes_read == -1) {
-            perror("Failed to read from file");
-            return;
+    char blk[BLOCK_SIZE];
+    int offset = 0;
+
+    for (int i = 0; i < cnt; ++i) {
+        if (offset == 0) {
+            read(fd, blk, BLOCK_SIZE);
         }
-        remaining -= bytes_read;
-        offset += bytes_read;
-    }
-}
 
-void block_write_kb(const char* filename, size_t size_kb) {
-    struct sample* samples = malloc(size_kb * 1024 / sizeof(struct sample)); // 수정
-    if (samples == NULL) {
-        perror("Failed to allocate memory");
-        return;
-    }
-    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (fd == -1) {
-        perror("Failed to open file");
-        free(samples); // 할당된 메모리 해제
-        return;
-    }
-    block_write(fd, samples, size_kb * 1024);
-    close(fd);
-    free(samples); // 할당된 메모리 해제
-}
+        memcpy(&samples[i].c, &blk[offset], sizeof(samples[i].c));
+        offset += sizeof(samples[i].c);
 
-void block_write_mb(const char* filename, size_t size_mb) {
-    struct sample* samples = malloc(size_mb * 1024 * 1024 / sizeof(struct sample)); // 수정
-    if (samples == NULL) {
-        perror("Failed to allocate memory");
-        return;
-    }
-    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (fd == -1) {
-        perror("Failed to open file");
-        free(samples); // 할당된 메모리 해제
-        return;
-    }
-    block_write(fd, samples, size_mb * 1024 * 1024);
-    close(fd);
-    free(samples); // 할당된 메모리 해제
-}
+        memcpy(&samples[i].i, &blk[offset], sizeof(samples[i].i));
+        offset += sizeof(samples[i].i);
 
-void block_write_gb(const char* filename, size_t size_gb) {
-    struct sample* samples = malloc(size_gb * 1024 * 1024 * 1024 / sizeof(struct sample)); // 수정
-    if (samples == NULL) {
-        perror("Failed to allocate memory");
-        return;
+        memcpy(&samples[i].l, &blk[offset], sizeof(samples[i].l));
+        offset += sizeof(samples[i].l);
+
+        memcpy(&samples[i].d, &blk[offset], sizeof(samples[i].d));
+        offset += sizeof(samples[i].d);
+
+        if (offset == BLOCK_SIZE) {
+            offset = 0;
+        }
     }
-    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (fd == -1) {
-        perror("Failed to open file");
-        free(samples); // 할당된 메모리 해제
-        return;
-    }
-    block_write(fd, samples, size_gb * 1024 * 1024 * 1024);
+
     close(fd);
-    free(samples); // 할당된 메모리 해제
 }
