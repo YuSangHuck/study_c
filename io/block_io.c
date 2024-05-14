@@ -33,34 +33,52 @@ void block_read(int fd, void* data, size_t size) {
 }
 
 void block_write_kb(const char* filename, size_t size_kb) {
-    struct sample samples[size_kb * 1024 / sizeof(struct sample)];
+    struct sample* samples = malloc(size_kb * 1024 / sizeof(struct sample)); // 수정
+    if (samples == NULL) {
+        perror("Failed to allocate memory");
+        return;
+    }
     int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         perror("Failed to open file");
+        free(samples); // 할당된 메모리 해제
         return;
     }
-    block_write(fd, samples, sizeof(samples));
+    block_write(fd, samples, size_kb * 1024);
     close(fd);
+    free(samples); // 할당된 메모리 해제
 }
 
 void block_write_mb(const char* filename, size_t size_mb) {
-    struct sample samples[size_mb * 1024 * 1024 / sizeof(struct sample)];
+    struct sample* samples = malloc(size_mb * 1024 * 1024 / sizeof(struct sample)); // 수정
+    if (samples == NULL) {
+        perror("Failed to allocate memory");
+        return;
+    }
     int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         perror("Failed to open file");
+        free(samples); // 할당된 메모리 해제
         return;
     }
-    block_write(fd, samples, sizeof(samples));
+    block_write(fd, samples, size_mb * 1024 * 1024);
     close(fd);
+    free(samples); // 할당된 메모리 해제
 }
 
 void block_write_gb(const char* filename, size_t size_gb) {
-    struct sample samples[size_gb * 1024 * 1024 * 1024 / sizeof(struct sample)];
+    struct sample* samples = malloc(size_gb * 1024 * 1024 * 1024 / sizeof(struct sample)); // 수정
+    if (samples == NULL) {
+        perror("Failed to allocate memory");
+        return;
+    }
     int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         perror("Failed to open file");
+        free(samples); // 할당된 메모리 해제
         return;
     }
-    block_write(fd, samples, sizeof(samples));
+    block_write(fd, samples, size_gb * 1024 * 1024 * 1024);
     close(fd);
+    free(samples); // 할당된 메모리 해제
 }

@@ -1,11 +1,12 @@
 #ifndef BLOCK_IO_H
 #define BLOCK_IO_H
 
-#include <stdio.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #define BLOCK_SIZE 65536 // 64KB
 
