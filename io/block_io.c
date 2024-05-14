@@ -11,17 +11,72 @@ void block_io_write(const char* filename, sample* samples, int cnt) {
     int offset = 0;
 
     for (int i = 0; i < cnt; ++i) {
-        memcpy(&blk[offset], &samples[i].c, sizeof(samples[i].c));
-        offset += sizeof(samples[i].c);
+        // Ensure offset is within bounds before memcpy
+        if (offset + sizeof(samples[i].c) <= BLOCK_SIZE) {
+            memcpy(&blk[offset], &samples[i].c, sizeof(samples[i].c));
+            offset += sizeof(samples[i].c);
+        } else {
+            int pre_blk = BLOCK_SIZE - offset;
+            int post_blk = sizeof(samples[i].c) - pre_blk;
+            // c의 일부
+            memcpy(&blk[offset], (const char*)&samples[i].c, pre_blk);
+            write(fd, blk, BLOCK_SIZE);
+            offset = 0;
 
-        memcpy(&blk[offset], &samples[i].i, sizeof(samples[i].i));
-        offset += sizeof(samples[i].i);
+            // c의 나머지
+            memcpy(&blk[offset], (const char*)&samples[i].c + pre_blk, post_blk);
+            offset += post_blk;
+        }
 
-        memcpy(&blk[offset], &samples[i].l, sizeof(samples[i].l));
-        offset += sizeof(samples[i].l);
+        if (offset + sizeof(samples[i].i) <= BLOCK_SIZE) {
+            memcpy(&blk[offset], &samples[i].i, sizeof(samples[i].i));
+            offset += sizeof(samples[i].i);
+        } else {
+            int pre_blk = BLOCK_SIZE - offset;
+            int post_blk = sizeof(samples[i].i) - pre_blk;
+            // i의 일부
+            memcpy(&blk[offset], (const char*)&samples[i].i, pre_blk);
+            write(fd, blk, BLOCK_SIZE);
+            offset = 0;
 
-        memcpy(&blk[offset], &samples[i].d, sizeof(samples[i].d));
-        offset += sizeof(samples[i].d);
+            // i의 나머지
+            memcpy(&blk[offset], (const char*)&samples[i].i + pre_blk, post_blk);
+            offset += post_blk;
+        }
+
+        if (offset + sizeof(samples[i].l) <= BLOCK_SIZE) {
+            memcpy(&blk[offset], &samples[i].l, sizeof(samples[i].l));
+            offset += sizeof(samples[i].l);
+        } else {
+            int pre_blk = BLOCK_SIZE - offset;
+            int post_blk = sizeof(samples[i].l) - pre_blk;
+            // l의 일부
+            memcpy(&blk[offset], (const char*)&samples[i].l, pre_blk);
+            write(fd, blk, BLOCK_SIZE);
+            offset = 0;
+
+            // l의 나머지
+            memcpy(&blk[offset], (const char*)&samples[i].l + pre_blk, post_blk);
+            offset += post_blk;
+
+        }
+
+        if (offset + sizeof(samples[i].d) <= BLOCK_SIZE) {
+            memcpy(&blk[offset], &samples[i].d, sizeof(samples[i].d));
+            offset += sizeof(samples[i].d);
+        } else {
+            int pre_blk = BLOCK_SIZE - offset;
+            int post_blk = sizeof(samples[i].d) - pre_blk;
+            // d의 일부
+            memcpy(&blk[offset], (const char*)&samples[i].d, pre_blk);
+            write(fd, blk, BLOCK_SIZE);
+            offset = 0;
+
+            // d의 나머지
+            memcpy(&blk[offset], (const char*)&samples[i].d + pre_blk, post_blk);
+            offset += post_blk;
+
+        }
 
         if (offset >= BLOCK_SIZE) {
             write(fd, blk, BLOCK_SIZE);
