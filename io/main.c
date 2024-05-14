@@ -15,7 +15,7 @@ void measure_time(void (*function)(const char*, sample*, int), const char* filen
     end = clock();
 
     elapsed_time = ((double)(end - start)) / CLOCKS_PER_SEC;
-    printf("Elapsed time for %s: %f seconds\n", label, elapsed_time);
+    printf("Elapsed time for %20s: %f seconds\n", label, elapsed_time);
 }
 
 int main() {
@@ -38,18 +38,31 @@ int main() {
     sample* sample_1mb = malloc(cnt_1mb * sizeof(sample));
     sample* sample_1gb = malloc(cnt_1gb * sizeof(sample));
 
-    // Measure time for io
-    measure_time(io_write, filename_1kb_io, sample_1kb, cnt_1kb, "1kb io");
-    measure_time(io_write, filename_1mb_io, sample_1mb, cnt_1mb, "1mb io");
-    measure_time(io_write, filename_1gb_io, sample_1gb, cnt_1gb, "1gb io");
+    // Measure time for io write
+    measure_time(io_write, filename_1kb_io, sample_1kb, cnt_1kb, "io_write; 1kb");
+    measure_time(io_write, filename_1mb_io, sample_1mb, cnt_1mb, "io_write; 1mb");
+    measure_time(io_write, filename_1gb_io, sample_1gb, cnt_1gb, "io_write; 1gb");
 
-    measure_time(block_io_write, filename_1kb_block_io, sample_1kb, cnt_1kb, "1kb block_io");
-    measure_time(block_io_write, filename_1mb_block_io, sample_1mb, cnt_1mb, "1mb block_io");
-    measure_time(block_io_write, filename_1gb_block_io, sample_1gb, cnt_1gb, "1gb block_io");
+    measure_time(block_io_write, filename_1kb_block_io, sample_1kb, cnt_1kb, "block_io_write; 1kb");
+    measure_time(block_io_write, filename_1mb_block_io, sample_1mb, cnt_1mb, "block_io_write; 1mb");
+    measure_time(block_io_write, filename_1gb_block_io, sample_1gb, cnt_1gb, "block_io_write; 1gb");
 
-    measure_time(fio_write, filename_1kb_fio, sample_1kb, cnt_1kb, "1kb fio");
-    measure_time(fio_write, filename_1mb_fio, sample_1mb, cnt_1mb, "1mb fio");
-    measure_time(fio_write, filename_1gb_fio, sample_1gb, cnt_1gb, "1gb fio");
+    measure_time(fio_write, filename_1kb_fio, sample_1kb, cnt_1kb, "fio_write; 1kb");
+    measure_time(fio_write, filename_1mb_fio, sample_1mb, cnt_1mb, "fio_write; 1mb");
+    measure_time(fio_write, filename_1gb_fio, sample_1gb, cnt_1gb, "fio_write; 1gb");
+
+    // Measure time for io read
+    measure_time(io_read, filename_1kb_io, sample_1kb, cnt_1kb, "io_read; 1kb");
+    measure_time(io_read, filename_1mb_io, sample_1mb, cnt_1mb, "io_read; 1mb");
+    measure_time(io_read, filename_1gb_io, sample_1gb, cnt_1gb, "io_read; 1gb");
+
+    measure_time(block_io_read, filename_1kb_block_io, sample_1kb, cnt_1kb, "block_io_read; 1kb");
+    measure_time(block_io_read, filename_1mb_block_io, sample_1mb, cnt_1mb, "block_io_read; 1mb");
+    measure_time(block_io_read, filename_1gb_block_io, sample_1gb, cnt_1gb, "block_io_read; 1gb");
+
+    measure_time(fio_read, filename_1kb_fio, sample_1kb, cnt_1kb, "fio_read; 1kb");
+    measure_time(fio_read, filename_1mb_fio, sample_1mb, cnt_1mb, "fio_read; 1mb");
+    measure_time(fio_read, filename_1gb_fio, sample_1gb, cnt_1gb, "fio_read; 1gb");
 
     // Free allocated memory
     free(sample_1kb);
