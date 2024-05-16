@@ -1,21 +1,16 @@
 #include "block_io.h"
-
 static void write_field_to_block(int fd, char* blk, int* offset, void* field, size_t size) {
-    // Ensure offset is within bounds before memcpy
-    if (*offset + size <= BLOCK_SIZE) {
-        memcpy(&blk[*offset], field, size);
-        *offset += size;
-    } else {
-        int pre_blk = BLOCK_SIZE - *offset;
-        int post_blk = size - pre_blk;
-        // 필드의 일부를 블록에 복사합니다.
-        memcpy(&blk[*offset], field, pre_blk);
-        write(fd, blk, BLOCK_SIZE);
-        *offset = 0;
-
-        // 필드의 나머지를 블록에 복사합니다.
-        memcpy(&blk[*offset], (const char*)field + pre_blk, post_blk);
-        *offset += post_blk;
+    int remain = size;
+    while (remain > 0) {
+        int space_left_in_block = BLOCK_SIZE - *offset;
+        int bytes_to_copy = remain < space_left_in_block ? remain : space_left_in_block;
+        memcpy(&blk[*offset], field + (size - remain), bytes_to_copy);
+        remain -= bytes_to_copy;
+        *offset += bytes_to_copy;
+        if (*offset >= BLOCK_SIZE) {
+            write(fd, blk, BLOCK_SIZE);
+            *offset = 0;
+        }
     }
 }
 
@@ -34,11 +29,6 @@ void block_io_write(const char* filename, sample* samples, int cnt) {
         write_field_to_block(fd, blk, &offset, &samples[i].i, sizeof(samples[i].i));
         write_field_to_block(fd, blk, &offset, &samples[i].l, sizeof(samples[i].l));
         write_field_to_block(fd, blk, &offset, &samples[i].d, sizeof(samples[i].d));
-
-        if (offset >= BLOCK_SIZE) {
-            write(fd, blk, BLOCK_SIZE);
-            offset = 0;
-        }
     }
 
     if (offset > 0) {
