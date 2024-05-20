@@ -11,7 +11,7 @@ typedef struct sample {
     double d;
 } sample;
 
-// char c; int i; long l; double d;
-#define SIZEOF_SAMPLE (sizeof(char) + sizeof(int) + sizeof(long) + sizeof(double))
+// char c; int i; long l;
+#define SIZEOF_SAMPLE (sizeof(char) + sizeof(int) + sizeof(long))
 
 #endif /* STRUCT_DEF_H */

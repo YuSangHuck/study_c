@@ -2,3 +2,4 @@
 *.bin
 main
 *.dat
+*.dat.*
