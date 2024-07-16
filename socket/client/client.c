@@ -1,49 +1,40 @@
+// client.c
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
+#include <unistd.h>
 
-#define PORT 12345
-#define BUFFER_SIZE 1024
+#define PORT 8080
 
-int main() {
-    // 소켓 생성
-    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_socket == -1) {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
+int
+main() {
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+    char *hello = "Hello from client";
+    char buffer[1024] = {0};
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("\n Socket creation error \n");
+        return -1;
     }
 
-    // 서버 주소 설정
-    struct sockaddr_in server_address;
-    memset(&server_address, 0, sizeof(server_address));
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server_address.sin_port = htons(PORT);
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
 
-    if (connect(client_socket, (struct sockaddr*)&server_address, sizeof(server_address)) == -1) {
-        perror("Connection failed");
-        close(client_socket);
-        exit(EXIT_FAILURE);
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
     }
 
-    printf("Connected to server.\n");
-
-    char buffer[BUFFER_SIZE] = {0};
-    while(1) {
-        printf("Enter message: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-
-        if (send(client_socket, buffer, strlen(buffer), 0) == -1) {
-            perror("Send failed");
-            close(client_socket);
-            exit(EXIT_FAILURE);
-            break;
-        }
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("\nConnection Failed \n");
+        return -1;
     }
 
-    close(client_socket);
+    send(sock, hello, strlen(hello), 0);
+    printf("Hello message sent\n");
+
+    close(sock);
     return 0;
 }
