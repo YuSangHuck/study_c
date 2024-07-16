@@ -45,13 +45,15 @@ main() {
         printf("Non-blocking server waiting for connection...\n");
         fflush(stdout);
 
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                                 (socklen_t *)&addrlen)) < 0) {
+        new_socket = accept(server_fd, (struct sockaddr *)&address,
+                            (socklen_t *)&addrlen);
+
+        if (new_socket < 0) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 // No pending connections; non-blocking mode means accept()
                 // returns immediately
                 usleep(
-                    1000000); // Sleep for 100 milliseconds to prevent tight loop
+                    1000000); // Sleep for 1 seconds to prevent tight loop
                 continue;
             }
             else {
@@ -61,12 +63,25 @@ main() {
             }
         }
 
-        read(new_socket, buffer, 1024);
-        printf("Non-blocking server received: %s\n", buffer);
+        printf("Non-blocking server accepted connection\n");
         fflush(stdout);
-        send(new_socket, hello, strlen(hello), 0);
-        printf("Non-blocking server sent hello message\n");
-        fflush(stdout);
+
+        ssize_t valread = read(new_socket, buffer, 1024);
+        if (valread > 0) {
+            printf("Non-blocking server received: %s\n", buffer);
+            fflush(stdout);
+            send(new_socket, hello, strlen(hello), 0);
+            printf("Non-blocking server sent hello message\n");
+            fflush(stdout);
+        }
+        else {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                printf("No data available to read\n");
+                fflush(stdout);
+            }
+            else
+                perror("read");
+        }
 
         close(new_socket);
     }

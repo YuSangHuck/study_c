@@ -14,3 +14,19 @@ services:
     ports:
       - "8082:8080"
     command: ./nonblocking_server
+
+  blocking_client:
+    build:
+      context: .
+    depends_on:
+      - blocking_server
+      - nonblocking_server
+    command: ./blocking_client
+
+  nonblocking_client:
+    build:
+      context: .
+    depends_on:
+      - blocking_server
+      - nonblocking_server
+    command: ./nonblocking_client

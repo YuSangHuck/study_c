@@ -46,12 +46,20 @@ main() {
             exit(EXIT_FAILURE);
         }
 
-        read(new_socket, buffer, 1024);
-        printf("Blocking server received: %s\n", buffer);
+        printf("Blocking server accepted connection\n");
         fflush(stdout);
-        send(new_socket, hello, strlen(hello), 0);
-        printf("Blocking server sent hello message\n");
-        fflush(stdout);
+
+        ssize_t valread = read(new_socket, buffer, 1024);
+        if (valread > 0) {
+            printf("Blocking server received: %s\n", buffer);
+            fflush(stdout);
+            send(new_socket, hello, strlen(hello), 0);
+            printf("Blocking server sent hello message\n");
+            fflush(stdout);
+        }
+        else {
+            perror("read");
+        }
 
         close(new_socket);
     }
