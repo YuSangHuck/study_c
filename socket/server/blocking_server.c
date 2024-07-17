@@ -1,3 +1,4 @@
+#include "../common/log.h"
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +37,7 @@ main() {
     }
 
     while (1) {
-        printf("Blocking server waiting for connection...\n");
+        LOG("Blocking server waiting for connection...\n");
         fflush(stdout);
 
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
@@ -46,15 +47,15 @@ main() {
             exit(EXIT_FAILURE);
         }
 
-        printf("Blocking server accepted connection\n");
+        LOG("Blocking server accepted connection\n");
         fflush(stdout);
 
         ssize_t valread = read(new_socket, buffer, 1024);
         if (valread > 0) {
-            printf("Blocking server received: %s\n", buffer);
+            LOG("Blocking server received: %s\n", buffer);
             fflush(stdout);
             send(new_socket, hello, strlen(hello), 0);
-            printf("Blocking server sent hello message\n");
+            LOG("Blocking server sent hello message\n");
             fflush(stdout);
         }
         else {

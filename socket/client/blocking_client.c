@@ -1,3 +1,4 @@
+#include "../common/log.h"
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -37,12 +38,12 @@ main() {
     }
 
     send(sock, hello, strlen(hello), 0);
-    printf("Blocking client sent message\n");
+    LOG("Blocking client sent message\n");
     fflush(stdout);
 
     ssize_t valread = read(sock, buffer, 1024);
     if (valread > 0) {
-        printf("Blocking client received: %s\n", buffer);
+        LOG("Blocking client received: %s\n", buffer);
         fflush(stdout);
     }
     else {

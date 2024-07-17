@@ -1,3 +1,4 @@
+#include "../common/log.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -42,7 +43,7 @@ main() {
     fcntl(server_fd, F_SETFL, flags | O_NONBLOCK);
 
     while (1) {
-        printf("Non-blocking server waiting for connection...\n");
+        LOG("Non-blocking server waiting for connection...\n");
         fflush(stdout);
 
         new_socket = accept(server_fd, (struct sockaddr *)&address,
@@ -63,20 +64,20 @@ main() {
             }
         }
 
-        printf("Non-blocking server accepted connection\n");
+        LOG("Non-blocking server accepted connection\n");
         fflush(stdout);
 
         ssize_t valread = read(new_socket, buffer, 1024);
         if (valread > 0) {
-            printf("Non-blocking server received: %s\n", buffer);
+            LOG("Non-blocking server received: %s\n", buffer);
             fflush(stdout);
             send(new_socket, hello, strlen(hello), 0);
-            printf("Non-blocking server sent hello message\n");
+            LOG("Non-blocking server sent hello message\n");
             fflush(stdout);
         }
         else {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                printf("No data available to read\n");
+                LOG("No data available to read\n");
                 fflush(stdout);
             }
             else

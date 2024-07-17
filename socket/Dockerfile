@@ -10,16 +10,16 @@ WORKDIR /usr/src/app
 COPY . .
 
 # Compile the blocking server
-RUN gcc -o blocking_server server/blocking_server.c
+RUN gcc -o blocking_server server/blocking_server.c common/log.c
 
 # Compile the non-blocking server
-RUN gcc -o nonblocking_server server/nonblocking_server.c
+RUN gcc -o nonblocking_server server/nonblocking_server.c common/log.c
 
 # Compile the blocking client
-RUN gcc -o blocking_client client/blocking_client.c
+RUN gcc -o blocking_client client/blocking_client.c common/log.c
 
 # Compile the non-blocking client
-RUN gcc -o nonblocking_client client/nonblocking_client.c
+RUN gcc -o nonblocking_client client/nonblocking_client.c common/log.c
 
 # Install necessary tools
 RUN apt-get update && apt-get install -y netcat-openbsd iproute2

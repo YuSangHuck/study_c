@@ -1,3 +1,4 @@
+#include "../common/log.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -40,7 +41,7 @@ main() {
     while (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) <
            0) {
         if (errno == EINPROGRESS) {
-            printf("Non-blocking client: connection in progress\n");
+            LOG("Non-blocking client: connection in progress\n");
             fflush(stdout);
             usleep(1000000); // Sleep for 1 seconds to prevent tight loop
             continue;
@@ -52,13 +53,13 @@ main() {
     }
 
     send(sock, hello, strlen(hello), 0);
-    printf("Non-blocking client sent message\n");
+    LOG("Non-blocking client sent message\n");
     fflush(stdout);
 
     ssize_t valread;
     while ((valread = read(sock, buffer, 1024)) <= 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            printf("Non-blocking client: no data available to read yet\n");
+            LOG("Non-blocking client: no data available to read yet\n");
             fflush(stdout);
             usleep(1000000); // Sleep for 1 seconds to prevent tight loop
             continue;
@@ -69,7 +70,7 @@ main() {
             return -1;
         }
     }
-    printf("Non-blocking client received: %s\n", buffer);
+    LOG("Non-blocking client received: %s\n", buffer);
     fflush(stdout);
 
     close(sock);
