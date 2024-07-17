@@ -11,8 +11,6 @@ services:
   nonblocking_server:
     build:
       context: .
-    depends_on:
-      - blocking_server # set dependency for ensuring of ip address
     ports:
       - "8082:8080"
     command: ./nonblocking_server # 172.18.0.3
