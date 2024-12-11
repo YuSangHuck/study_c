@@ -1,5 +1,7 @@
 *.o
 *.bin
-main
 *.dat
 *.dat.*
+
+main
+my_program

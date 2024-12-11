@@ -1,3 +1,9 @@
 {
-  "editor.tabSize": 4
+  "editor.tabSize": 4,
+  "files.associations": {
+    "FS01_*": "diff",
+    "FS02_*": "diff",
+    "US03_*": "diff",
+    "stdio.h": "c"
+  }
 }
