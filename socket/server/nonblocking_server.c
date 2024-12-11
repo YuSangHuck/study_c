@@ -43,8 +43,7 @@ main() {
     fcntl(server_fd, F_SETFL, flags | O_NONBLOCK);
 
     while (1) {
-        LOG("Non-blocking server waiting for connection...\n");
-        fflush(stdout);
+        LOG("Non-blocking server waiting for connection...");
 
         new_socket = accept(server_fd, (struct sockaddr *)&address,
                             (socklen_t *)&addrlen);
@@ -64,21 +63,17 @@ main() {
             }
         }
 
-        LOG("Non-blocking server accepted connection\n");
-        fflush(stdout);
+        LOG("Non-blocking server accepted connection");
 
         ssize_t valread = read(new_socket, buffer, 1024);
         if (valread > 0) {
-            LOG("Non-blocking server received: %s\n", buffer);
-            fflush(stdout);
+            LOG("Non-blocking server received: %s", buffer);
             send(new_socket, hello, strlen(hello), 0);
-            LOG("Non-blocking server sent hello message\n");
-            fflush(stdout);
+            LOG("Non-blocking server sent hello message");
         }
         else {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                LOG("No data available to read\n");
-                fflush(stdout);
+                LOG("No data available to read");
             }
             else
                 perror("read");

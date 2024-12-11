@@ -93,6 +93,7 @@ log_internal(const char *fmt, ...) {
 
     log_format(log_buf, fmt, ap);
     printf("%s", log_buf);
+    fflush(stdout);
 
     va_end(ap);
 }

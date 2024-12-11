@@ -1,11 +1,14 @@
 #include "../common/log.h"
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#define PORT 8080
+#define PORT          8080
+#define BUFFER_SIZE   1024
+#define RECV_INTERVAL 1000000 // 1 second in microseconds
 
 int
 main() {
@@ -16,7 +19,7 @@ main() {
     const char *hello = "Hello from blocking server";
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
+        LOG("socket failed (error:%s)", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -25,46 +28,45 @@ main() {
     address.sin_port = htons(PORT);
 
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("bind failed");
+        LOG("bind failed (error:%s)", strerror(errno));
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
     if (listen(server_fd, 3) < 0) {
-        perror("listen");
+        LOG("listen (error:%s)", strerror(errno));
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    while (1) {
-        LOG("Blocking server waiting for connection...\n");
-        fflush(stdout);
+    LOG("waiting for connection...");
 
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                                 (socklen_t *)&addrlen)) < 0) {
-            perror("accept");
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
+                             (socklen_t *)&addrlen)) < 0) {
+        LOG("accept (error:%s)", strerror(errno));
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    LOG("accepted connection");
+
+    while (1) {
+        // 데이터 수신
+        int n = recv(server_fd, buffer, BUFFER_SIZE, 0);
+        if (n < 0) {
+            LOG("recv (error:%s)", strerror(errno));
             close(server_fd);
+            close(new_socket);
             exit(EXIT_FAILURE);
         }
 
-        LOG("Blocking server accepted connection\n");
-        fflush(stdout);
+        LOG("received %d bytes", n);
 
-        ssize_t valread = read(new_socket, buffer, 1024);
-        if (valread > 0) {
-            LOG("Blocking server received: %s\n", buffer);
-            fflush(stdout);
-            send(new_socket, hello, strlen(hello), 0);
-            LOG("Blocking server sent hello message\n");
-            fflush(stdout);
-        }
-        else {
-            perror("read");
-        }
-
-        close(new_socket);
+        // RECV_INTERVAL 동안 대기
+        usleep(RECV_INTERVAL);
     }
 
     close(server_fd);
+    close(new_socket);
     return 0;
 }

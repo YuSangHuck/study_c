@@ -8,9 +8,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#define PORT 8080
-#define SERVER_NAME                                                            \
-    "nonblocking_server" // Docker Compose에서 정의한 서비스 이름
+#define PORT             8080
+#define SERVER_NAME      "blocking_server"
+#define CONNECT_INTERVAL 1000000 // 1s in microseconds
+#define BUFFER_SIZE      1024
+#define SEND_INTERVAL    1000000 // 100ms in microseconds
 
 int
 main() {
@@ -20,16 +22,14 @@ main() {
     char buffer[1024] = {0};
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Socket creation error");
+        LOG("socket creation failed (error:%s)", strerror(errno));
         return -1;
     }
 
-    int flags = fcntl(sock, F_GETFL, 0);
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 
     struct hostent *server = gethostbyname(SERVER_NAME);
     if (server == NULL) {
-        fprintf(stderr, "Error: Unable to resolve hostname\n");
+        LOG("Unable to resolve hostname");
         return -1;
     }
 
@@ -38,40 +38,35 @@ main() {
     memcpy(&serv_addr.sin_addr.s_addr, server->h_addr_list[0],
            server->h_length);
 
-    while (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) <
-           0) {
-        if (errno == EINPROGRESS) {
-            LOG("Non-blocking client: connection in progress\n");
-            fflush(stdout);
-            usleep(1000000); // Sleep for 1 seconds to prevent tight loop
-            continue;
-        }
-        else {
-            perror("Connection Failed");
-            return -1;
-        }
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        LOG("connect failed (error:%s)", strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
-    send(sock, hello, strlen(hello), 0);
-    LOG("Non-blocking client sent message\n");
-    fflush(stdout);
+    int flags = fcntl(sock, F_GETFL, 0);
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 
-    ssize_t valread;
-    while ((valread = read(sock, buffer, 1024)) <= 0) {
-        if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            LOG("Non-blocking client: no data available to read yet\n");
-            fflush(stdout);
-            usleep(1000000); // Sleep for 1 seconds to prevent tight loop
-            continue;
+    while (1) {
+        // 보내기 시도
+        LOG("try to send");
+        int n = send(sock, buffer, BUFFER_SIZE, 0);
+        if (n < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                LOG("send buffer full, EWOULDBLOCK");
+            }
+            else {
+                LOG("send failed (error:%s)", strerror(errno));
+                close(sock);
+                exit(EXIT_FAILURE);
+            }
         }
         else {
-            perror("read");
-            close(sock);
-            return -1;
+            LOG("sended");
         }
+
+        // SEND_INTERVAL 동안 대기
+        usleep(SEND_INTERVAL);
     }
-    LOG("Non-blocking client received: %s\n", buffer);
-    fflush(stdout);
 
     close(sock);
     return 0;
