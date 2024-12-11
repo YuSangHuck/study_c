@@ -8,23 +8,22 @@ print_usage(const char *prog_name) {
     printf("Usage: %s <gid> <uid> <script_path>\n", prog_name);
 }
 
-// Function to fork and execute a script
+// Function to execute a script using system()
 int
-fork_and_execute(const char *script_path) {
-    pid_t pid = fork();
-    if (pid < 0) {
-        perror("Failed to fork");
+system_execute(const char *script_path) {
+    char command[256];
+
+    // Construct the command to run the script
+    snprintf(command, sizeof(command), "/bin/sh %s", script_path);
+
+    // Execute the command
+    int ret = system(command);
+    if (ret == -1) {
+        perror("Failed to execute script with system");
         return -1;
     }
-    else if (pid == 0) {
-        // Child process: Execute the script
-        execl("/bin/sh", "/bin/sh", script_path, (char *)NULL);
-        perror("Failed to execute script");
-        exit(1);
-    }
 
-    // Parent process: Continue without waiting for the child
-    printf("Script is running asynchronously with PID %d\n", pid);
+    printf("Script executed with system, return code: %d\n", ret);
     return 0;
 }
 
@@ -41,7 +40,7 @@ main(int argc, char *argv[]) {
     const char *script_path = argv[3];
 
     // Execute the script as the current process (default GID/UID)
-    if (fork_and_execute(script_path) != 0)
+    if (system_execute(script_path) != 0)
         return 1;
 
     // Change GID
@@ -57,10 +56,10 @@ main(int argc, char *argv[]) {
     }
 
     // Execute the script with new GID/UID
-    if (fork_and_execute(script_path) != 0)
+    if (system_execute(script_path) != 0)
         return 1;
 
-    // Allow the parent process to continue while children run
+    // Allow the parent process to continue while scripts run
     sleep(10);
     return 0;
 }
