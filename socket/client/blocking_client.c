@@ -46,8 +46,8 @@ main() {
     }
     LOG("Connected");
 
-    int flags = fcntl(sock, F_GETFL, 0);
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    // int flags = fcntl(sock, F_GETFL, 0);
+    // fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 
     while (1) {
         // 보내기 시도
@@ -56,8 +56,8 @@ main() {
         if (n < 0) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 LOG("send buffer full, EWOULDBLOCK");
-            }
-            else {
+    }
+    else {
                 LOG("send failed (error:%s)", strerror(errno));
                 close(sock);
                 exit(EXIT_FAILURE);
