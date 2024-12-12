@@ -1,0 +1,7 @@
+cwd의 개념에 대해 알기 위함.
+
+프로세스에는 cwd라는 개념이 있고, 이는 프로그램을 실행한 currenr working direcotry를 의미
+my_program -> a.sh에서 b.sh의 함수를 호출
+b.sh의 함수는 cwd 기반으로 where_am_i라는 파일을 생성한다.
+
+즉, my_program을 실행한 위치에서 where_am_i가 생긴다.
